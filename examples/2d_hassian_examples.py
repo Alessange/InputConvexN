@@ -6,8 +6,8 @@ import polyscope as ps
 import torch.nn.functional as F
 
 # Create a simple cantilevered beam
-aspect_ratio = 3
-ns =  3
+aspect_ratio = 2
+ns =  2
 X,F = igl.triangulated_grid(aspect_ratio*ns+1,ns+1)
     # per-vertex mass
 M = igl.massmatrix(X,F,igl.MASSMATRIX_TYPE_VORONOI).diagonal()
@@ -80,12 +80,18 @@ def momentum_potential(x, xtilde, mass):
     
     return energy
 
-def compute_total_energy(xtilde):
-    global x, xdot, M, dt
+def compute_total_energy(xtilde, x):
+    global xdot, M, dt
+    if x.shape != xtilde.shape:
+        x = x.view(xtilde.shape)
     elastic_energy = stable_neohookean_elasticity(x, X, F, scale=dt**2)
     momentum_energy = momentum_potential(x, xtilde, M)
     total_energy = elastic_energy + momentum_energy 
     return total_energy
+
+
+
+
 
 def integrate():
     global t, xdot, x, g, fixed, bc, dt, lr, xprev
@@ -99,25 +105,39 @@ def integrate():
     #x = xtilde
 
     for i in range(50):
-
+        x0 = x.clone().detach()
         x = x.detach().clone().requires_grad_(True)
 
-        total_E = compute_total_energy(xtilde)
+        total_E = compute_total_energy(xtilde, x)
 
         # Backprop
         if x.grad is not None:
             x.grad.zero_()
         total_E.backward()
+        grad_E = x.grad
+        x_flat = x.view(-1)
+        grad_E_flat = grad_E.view(-1)
 
-        grad = x.grad.detach()
-        print(grad.size())
+        def energy_func(x_flat):
+            x_reshaped = x_flat.view_as(x)
+            return compute_total_energy(xtilde, x_reshaped)
+
+        H = torch.autograd.functional.hessian(energy_func, x_flat, create_graph=True)
+        delta = torch.linalg.solve(H, grad_E_flat)
+
+
+        # H = torch.autograd.functional.hessian(energy_func, x_flat, create_graph=True)
+        # print(f"H: {H.size()}")
+        # H_inv = torch.linalg.inv(H)
+
         with torch.no_grad():
-            x = x - lr * grad
-            x[fixed] = bc + X[fixed]
-
+            # x_new_flat = x_flat - H_inv @ grad_E_flat
+            x_new_flat = x_flat - delta
+            x_new = x_new_flat.view_as(x0)
+            x_new[fixed] = bc + X[fixed]
+        x = x_new.clone().detach().requires_grad_(True)
     damping = 1
     xdot = ((x - x_start) / dt * damping).detach()
-    # print(f"xdot: {xdot}")
     xprev = x.clone().detach()
 
     t += dt
