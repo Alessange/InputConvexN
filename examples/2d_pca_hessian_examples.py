@@ -105,7 +105,10 @@ def integrate():
 
     # Compute the reduced coordinates
     x = trans.to_full(q) 
-    xtilde = x + dt * xdot + dt**2 * g 
+    xtilde = x + dt * xdot + dt**2 * g
+
+    q = trans.to_reduced(xtilde) 
+    
     with torch.no_grad():
         xtilde[fixed] = bc + X[fixed]
 
