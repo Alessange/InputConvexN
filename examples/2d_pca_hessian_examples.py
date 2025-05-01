@@ -59,7 +59,6 @@ class Transformation:
 
         X_flat = self.U @ q
         X = X_flat.view(-1, 2)
-        print(X.shape)
         return X
 
     def to_reduced(self, x: torch.Tensor) -> torch.Tensor:
@@ -124,8 +123,8 @@ def integrate():
 
 if __name__ == "__main__":
     # Create a simple cantilevered beam
-    aspect_ratio = 8
-    ns =  8
+    aspect_ratio = 4
+    ns =  4
     X,F = igl.triangulated_grid(aspect_ratio*ns+1,ns+1)
     M = igl.massmatrix(X,F,igl.MASSMATRIX_TYPE_VORONOI).diagonal()
     X[:,0] *= aspect_ratio
@@ -142,7 +141,7 @@ if __name__ == "__main__":
     M = igl.massmatrix(X_np, F_np, igl.MASSMATRIX_TYPE_VORONOI)
 
 
-    num_eigen = 7
+    num_eigen = 10
 
     # Solve the generalized eigenvalue problem: Lx = λMx
     vals, vecs = sp.sparse.linalg.eigsh(-L, k=num_eigen, M=M, sigma=0, which='LM')
@@ -206,8 +205,9 @@ if __name__ == "__main__":
             xdot = torch.zeros_like(xdot)
             xprev = trans.to_full(q).view_as(xprev)
         integrate()
-        x_full = trans.to_full(q)
-        ps_mesh.update_vertex_positions(x_full.detach().numpy())
+        x_display = trans.to_full(q)
+        x_display[fixed] = bc + X[fixed] # boundary condition at displaying
+        ps_mesh.update_vertex_positions(x_display.detach().numpy())
 
     ps.set_ground_plane_mode("shadow_only")
     ps.set_user_callback(callback)

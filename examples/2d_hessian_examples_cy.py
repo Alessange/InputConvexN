@@ -6,8 +6,8 @@ import polyscope as ps
 import torch.nn.functional as F
 
 # Create a simple cantilevered beam
-aspect_ratio = 2
-ns =  2
+aspect_ratio = 8
+ns =  8
 X,F = igl.triangulated_grid(aspect_ratio*ns+1,ns+1)
     # per-vertex mass
 M = igl.massmatrix(X,F,igl.MASSMATRIX_TYPE_VORONOI).diagonal()
