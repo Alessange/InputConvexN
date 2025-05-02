@@ -40,12 +40,18 @@ def momentum_potential(x, xtilde, mass):
     return energy
 
 def compute_total_energy(xtilde, x):
-    global xdot, M, dt
+    global xdot, M, dt, fixed
     if x.shape != xtilde.shape:
         x = x.view(xtilde.shape)
     elastic_energy = stable_neohookean_elasticity(x, X, F, scale=dt**2)
     momentum_energy = momentum_potential(x, xtilde, M)
-    total_energy = 20 * elastic_energy + momentum_energy 
+    
+    boundary_condition = torch.sum(((x[fixed] - X[fixed])) ** 2)
+    #print(boundary_condition, bc)
+    
+    total_energy = 20 * elastic_energy + momentum_energy + boundary_condition * 0.5
+    
+    #print(total_energy, boundary_condition * 10000000.)
     return total_energy
 
 class Transformation:
@@ -56,45 +62,55 @@ class Transformation:
         self.U_pinv = torch.linalg.pinv(U)
 
     def to_full(self, q: torch.Tensor) -> torch.Tensor:
+        global X
 
-        X_flat = self.U @ q
-        X = X_flat.view(-1, 2)
-        return X
+        X_flat = self.U @ q 
+        X_flat = X_flat.view(-1, 2) + X
+        return X_flat
 
     def to_reduced(self, x: torch.Tensor) -> torch.Tensor:
-
+    
+        global X
         if x.ndim == 2:
             x_flat = x.reshape(-1)
         else:
             x_flat = x
         # project
+        x_flat = x_flat - X.reshape_as(x_flat)
         q = self.U_pinv @ x_flat
         return q
 
 def integrate():
     global t, q, xdot, g, fixed, bc, dt, trans, X
 
-    print(f"Integrating t={t:.3f}")
+    print(f"Integrating t={t:.3f}", q.shape)
 
     # Compute the reduced coordinates
     x = trans.to_full(q) 
-    xtilde = x + dt * xdot + dt**2 * g
-    with torch.no_grad():
-        xtilde[fixed] = bc + X[fixed]
+    xtilde = x + dt * xdot + dt**2 * g 
+    #with torch.no_grad():
+    #    xtilde[fixed] = bc + X[fixed]
         
     x_start = x.clone().detach()
+    
+    X = X.detach()
     
     #x = xtilde
     def energy_func_reduced_q(q_reduced):
             x_full = trans.to_full(q_reduced)
             return compute_total_energy(xtilde, x_full)
     
-    for i in range(50):
+    for i in range(5):
         q = q.detach().clone().requires_grad_(True)
+        print(q)
+        #exit()
+        
 
         E_val = energy_func_reduced_q(q)
         grad_q = torch.autograd.grad(E_val, q)[0]
         H_q    = torch.autograd.functional.hessian(energy_func_reduced_q, q)
+        
+        #print(H_q.shape)
 
         L, Q = torch.linalg.eigh(H_q)
         H_pd = Q @ torch.diag_embed(torch.abs(L)) @ Q.mH
@@ -102,10 +118,10 @@ def integrate():
 
         with torch.no_grad():
 
-            q = q - 1.5 * delta_q
+            q = q - 1 * delta_q
             x_new = trans.to_full(q).view_as(x_start)
-            x_new[fixed] = bc + X[fixed]
-            q = trans.to_reduced(x_new)
+            #x_new[fixed] = bc + X[fixed]
+            #q = trans.to_reduced(x_new)
         x = x_new.clone().detach().requires_grad_(True)
     damping = 1
     xdot = ((x - x_start) / dt * damping).detach()
@@ -124,7 +140,7 @@ def integrate():
 if __name__ == "__main__":
     # Create a simple cantilevered beam
     aspect_ratio = 4
-    ns =  4
+    ns =  20
     X,F = igl.triangulated_grid(aspect_ratio*ns+1,ns+1)
     M = igl.massmatrix(X,F,igl.MASSMATRIX_TYPE_VORONOI).diagonal()
     X[:,0] *= aspect_ratio
@@ -141,7 +157,7 @@ if __name__ == "__main__":
     M = igl.massmatrix(X_np, F_np, igl.MASSMATRIX_TYPE_VORONOI)
 
 
-    num_eigen = 10
+    num_eigen = 25
 
     # Solve the generalized eigenvalue problem: Lx = λMx
     vals, vecs = sp.sparse.linalg.eigsh(-L, k=num_eigen, M=M, sigma=0, which='LM')
@@ -191,6 +207,8 @@ if __name__ == "__main__":
     trans = Transformation(U)
 
     q = trans.to_reduced(X) 
+    #print(q.shape)
+    q = torch.zeros_like(q)
 
     ps.init()
     ps.set_give_focus_on_show(True)
@@ -206,7 +224,7 @@ if __name__ == "__main__":
             xprev = trans.to_full(q).view_as(xprev)
         integrate()
         x_display = trans.to_full(q)
-        x_display[fixed] = bc + X[fixed] # boundary condition at displaying
+        #x_display[fixed] = bc + X[fixed] # boundary condition at displaying
         ps_mesh.update_vertex_positions(x_display.detach().numpy())
 
     ps.set_ground_plane_mode("shadow_only")

@@ -6,8 +6,8 @@ import polyscope as ps
 import torch.nn.functional as F
 
 # Create a simple cantilevered beam
-aspect_ratio = 8
-ns =  8
+aspect_ratio = 4
+ns =  4
 X,F = igl.triangulated_grid(aspect_ratio*ns+1,ns+1)
     # per-vertex mass
 M = igl.massmatrix(X,F,igl.MASSMATRIX_TYPE_VORONOI).diagonal()
@@ -86,7 +86,7 @@ def compute_total_energy(xtilde, x):
         x = x.view(xtilde.shape)
     elastic_energy = stable_neohookean_elasticity(x, X, F, scale=dt**2)
     momentum_energy = momentum_potential(x, xtilde, M)
-    total_energy = elastic_energy * 20 + momentum_energy 
+    total_energy = elastic_energy * 40 + momentum_energy 
     return total_energy
 
 
@@ -98,7 +98,7 @@ def integrate():
 
     print(f"Integrating t={t:.3f}")
 
-    xtilde = x + dt * xdot + dt**2 * g 
+    xtilde = x + dt * xdot + dt**2 * g * 0.1 
     with torch.no_grad():
         xtilde[fixed] = bc + X[fixed]
 
@@ -130,20 +130,20 @@ def integrate():
         H = torch.autograd.functional.hessian(energy_func, x_flat, create_graph=True)
         
         hessian = H.reshape(grad_E_flat.shape[0], grad_E_flat.shape[0])
-        L, Q = torch.linalg.eigh(hessian)
-        L = torch.abs(L)
+        #L, Q = torch.linalg.eigh(hessian)
+        #L = torch.abs(L)
             
             
-        H = Q @ torch.diag_embed(L) @ Q.mH
+        #H = Q @ torch.diag_embed(L) @ Q.mH
         
-        delta = torch.linalg.solve(H, grad_E_flat)
+        delta = torch.linalg.solve(hessian, grad_E_flat)
 
 
         
 
         with torch.no_grad():
             # x_new_flat = x_flat - H_inv @ grad_E_flat
-            x_new_flat = x_flat - delta * 1.5
+            x_new_flat = x_flat - delta 
             x_new = x_new_flat.view_as(x0)
             #x_new[fixed] = bc + X[fixed]
         x = x_new.clone().detach().requires_grad_(True)
