@@ -4,7 +4,7 @@ from autoencoder import Autoencoder
 
 
 
-def train(model, loader, num_epochs=10, lr=0.001, device=None):
+def train(model, loader, num_epochs=100, lr=0.001, device=None):
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = torch.nn.MSELoss()
@@ -39,6 +39,6 @@ if __name__ == "__main__":
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = Autoencoder(input_dim=X.shape[1], hidden_dim=500, latent_dim=5)
-    trained_model = train(model, loader, num_epochs=50, lr=1e-3, device=device)
+    trained_model = train(model, loader, num_epochs=500, lr=1e-3, device=device)
     torch.save(trained_model.state_dict(), "cantilevered_beam/autoencoder.pth")
 
