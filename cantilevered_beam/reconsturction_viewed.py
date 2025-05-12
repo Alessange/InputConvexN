@@ -10,8 +10,8 @@ T, N, dim = all_disp.shape
 X_flat = all_disp.view(T, -1).float()
 
 
-model = Autoencoder(input_dim=X_flat.shape[1], hidden_dim=30, latent_dim=30)
-model.load_state_dict(torch.load("cantilevered_beam/autoencoder_pca_init.pth", map_location="cpu"))
+model = Autoencoder(input_dim=X_flat.shape[1], hidden_dim=100, latent_dim=30)
+model.load_state_dict(torch.load("cantilevered_beam/autoencoder_init.pth", map_location="cpu"))
 model.eval()
 
 mesh = CantileverMesh(aspect_ratio=4, ns=20)
