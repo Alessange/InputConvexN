@@ -34,7 +34,7 @@ if __name__ == "__main__":
     all_disp = torch.load("cantilevered_beam/displacements.pt")                
     T, N, dim = all_disp.shape
     num_samples, n_vert, n_dim = all_disp.shape 
-    X = all_disp.view(num_samples, -1).float()
+    X = all_disp.view(num_samples, -1).float().double()
 
 
     

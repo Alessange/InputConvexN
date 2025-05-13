@@ -33,6 +33,7 @@ class Autoencoder(nn.Module):
         super(Autoencoder, self).__init__()
         self.encoder = Encoder(input_dim, hidden_dim, latent_dim)
         self.decoder = Decoder(latent_dim, hidden_dim, input_dim)
+        self.double()
 
     def forward(self, x):
         z = self.encoder(x)
