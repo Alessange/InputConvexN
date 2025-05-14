@@ -8,7 +8,7 @@ import polyscope as ps
 def run():
     mesh   = CantileverMesh(aspect_ratio=4, ns=20)
     # basis  = ModalBasis(mesh, num_keep=25)
-    basis  = AutoencoderBasis(mesh.X_np, hidden_dim=100, latent_dim=30)
+    basis  = AutoencoderBasis(mesh.X_np, hidden_dim=100, latent_dim=30, model="cantilevered_beam/autoencoder_pca_init.pth")
     
 
     # initial q, x, xdot
