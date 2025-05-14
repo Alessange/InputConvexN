@@ -12,12 +12,12 @@ class ModalBasis:
         return X + disp
 
 class AutoencoderBasis:
-    def __init__(self, input, hidden_dim=100, latent_dim=30):
+    def __init__(self, input, hidden_dim=100, latent_dim=30, model=None):
         self.X = input
         self.latent_dim = latent_dim
         input_dim = input.flatten().shape[0]
         self.autoencoder = Autoencoder(input_dim=input_dim, hidden_dim=hidden_dim, latent_dim=latent_dim)
-        self.autoencoder.load_state_dict(torch.load("cantilevered_beam/autoencoder_pca_init.pth", map_location="cpu"))
+        self.autoencoder.load_state_dict(torch.load(model, map_location="cpu"))
         self.autoencoder.eval()
 
 
