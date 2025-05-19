@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     
     latent_dim = 30
-    hidden_dim = 100
+    hidden_dim = 30
     pca = PCA(n_components=hidden_dim)
     pca.fit(X)
     U_pca = pca.components_ 
