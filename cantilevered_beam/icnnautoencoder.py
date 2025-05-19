@@ -11,7 +11,7 @@ class InputConvexDecoder(nn.Module):
         self.w1 = nn.Parameter(torch.randn(hidden_dim, latent_dim))
         self.b1 = nn.Parameter(torch.randn(hidden_dim))
 
-        self.linear2 = nn.Linear(hidden_dim, output_dim, bias=False)
+        self.linear2 = nn.Linear(latent_dim, output_dim, bias=False)
         self.w2 = nn.Parameter(torch.randn(output_dim, hidden_dim))
         self.b2 = nn.Parameter(torch.randn(output_dim))
 
@@ -24,9 +24,9 @@ class InputConvexDecoder(nn.Module):
         wx2_positive = F.softplus(self.w2)
 
         pre_act = self.linear1(x) + self.b1 + F.linear(x_prev, wx1_positive)
-        x1 = F.leaky_relu(pre_act)
+        x1 = F.elu(pre_act)
         
-        out = self.linear2(x1) + self.b2 + F.linear(x1, wx2_positive)
+        out = self.linear2(x) + self.b2 + F.linear(x1, wx2_positive)
 
         return out
 

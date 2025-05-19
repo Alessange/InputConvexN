@@ -40,7 +40,7 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     latent_dim = 30
-    hidden_dim = 30
+    hidden_dim = 100
     pca = PCA(n_components=hidden_dim)
     pca.fit(X)
     U_pca = pca.components_ 
