@@ -24,7 +24,7 @@ class InputConvexDecoder(nn.Module):
         wx2_positive = F.softplus(self.w2)
 
         pre_act = self.linear1(x) + self.b1 + F.linear(x_prev, wx1_positive)
-        x1 = F.leaky_relu(pre_act, negative_slope=0.01)
+        x1 = F.elu(pre_act)
         
         out = self.linear2(x1) + self.b2 + F.linear(x1, wx2_positive)
 
@@ -51,7 +51,7 @@ class InputConvexEncoder(nn.Module):
         
         pre_act = self.linear1(x) + self.b1 + F.linear(x_prev, wx1_positive)
 
-        x1 = F.elu(pre_act)
+        x1 = torch.exp(pre_act)
         
         out = self.linear2(x1) + self.b2 + F.linear(x1, wx2_positive)
 
@@ -60,8 +60,8 @@ class InputConvexEncoder(nn.Module):
 class InputConvexAutoencoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, latent_dim):
         super(InputConvexAutoencoder, self).__init__()
-        self.encoder = InputConvexEncoder(input_dim, hidden_dim, latent_dim)
-        self.decoder = Decoder(latent_dim, hidden_dim, input_dim)
+        self.encoder = Encoder(input_dim, hidden_dim, latent_dim)
+        self.decoder = InputConvexDecoder(latent_dim, hidden_dim, input_dim)
 
     def forward(self, x):
         z = self.encoder(x)
