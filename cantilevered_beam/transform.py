@@ -1,6 +1,7 @@
 import torch
 from skinning_eigenmode_basis import expand_skinning_eigenmodes
 from autoencoder import Autoencoder
+from icnnautoencoder import InputConvexAutoencoder
 class ModalBasis:
     def __init__(self, mesh, num_keep):
         vecs, _ = mesh.compute_eigenmodes(num_keep)
@@ -22,6 +23,21 @@ class AutoencoderBasis:
 
 
     def to_full(self, q, X):
+        print(q.shape)
         x_recon = self.autoencoder.decoder(q).view(-1,2)
         return X + x_recon
 
+class InputConvexAutoencoderBasis:
+    def __init__(self, input, hidden_dim=100, latent_dim=30, model=None):
+        self.X = input
+        self.latent_dim = latent_dim
+        input_dim = input.flatten().shape[0]
+        self.autoencoder = InputConvexAutoencoder(input_dim=input_dim, hidden_dim=hidden_dim, latent_dim=latent_dim)
+        self.autoencoder.load_state_dict(torch.load(model, map_location="cpu"))
+        self.autoencoder.eval()
+
+
+    def to_full(self, q, X):
+        q = q.unsqueeze(0)
+        x_recon = self.autoencoder.decoder(q).view(-1,2)
+        return X + x_recon
