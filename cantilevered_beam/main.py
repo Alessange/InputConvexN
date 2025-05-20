@@ -9,7 +9,7 @@ def run():
     mesh   = CantileverMesh(aspect_ratio=4, ns=20)
     basis  = ModalBasis(mesh, num_keep=25)
     # basis  = AutoencoderBasis(mesh.X_np, hidden_dim=100, latent_dim=30, model="cantilevered_beam/autoencoder_pca_init.pth")
-    basis = InputConvexAutoencoderBasis(mesh.X_np, hidden_dim=100, latent_dim=30, model="cantilevered_beam/autoencoder_pca_init_ic.pth")
+    basis = InputConvexAutoencoderBasis(mesh.X_np, hidden_dim=30, latent_dim=30, model="cantilevered_beam/autoencoder_init_ic.pth")
 
     # initial q, x, xdot
     X = torch.tensor(mesh.X_np, dtype=torch.float64, requires_grad=False)

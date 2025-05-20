@@ -9,11 +9,11 @@ class InputConvexDecoder(nn.Module):
         super(InputConvexDecoder, self).__init__()
         self.linear1 = nn.Linear(latent_dim, hidden_dim, bias=False)
         self.w1 = nn.Parameter(torch.randn(hidden_dim, latent_dim))
-        self.b1 = nn.Parameter(torch.randn(hidden_dim))
+        self.b1 = nn.Parameter(torch.zeros(hidden_dim))
 
         self.linear2 = nn.Linear(latent_dim, output_dim, bias=False)
         self.w2 = nn.Parameter(torch.randn(output_dim, hidden_dim))
-        self.b2 = nn.Parameter(torch.randn(output_dim))
+        self.b2 = nn.Parameter(torch.zeros(output_dim))
 
     def forward(self, x):
         batch = x.size(0)
