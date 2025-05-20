@@ -40,7 +40,7 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     latent_dim = 30
-    hidden_dim = 30
+    hidden_dim = 100
     pca = PCA(n_components=hidden_dim)
     pca.fit(X)
     U_pca = pca.components_ 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         model.decoder.w2.copy_(torch.tensor(U_pca).T)
         model.decoder.b2.copy_(torch.zeros(X.shape[1]))
     
-    trained_model, loss_pca_init = train(model, loader, num_epochs=2000, lr=1e-4, device=device)
+    trained_model, loss_pca_init = train(model, loader, num_epochs=3000, lr=1e-4, device=device)
     torch.save(trained_model.state_dict(), "cantilevered_beam/autoencoder_pca_init_ic.pth")
     pd.DataFrame(loss_pca_init).to_csv("cantilevered_beam/loss_pca_init_ic.csv", index=False)
 
