@@ -51,21 +51,21 @@ if __name__ == "__main__":
     loader  = DataLoader(dataset,batch_size=64,shuffle=True)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    with torch.no_grad():
-        model.encoder.encoder[0].weight.copy_(torch.tensor(U_pca))
-        model.encoder.encoder[0].bias.copy_(torch.zeros(hidden_dim))
-        # model.decoder.decoder[-1].weight.copy_(torch.tensor(U_pca).T)
-        # model.decoder.decoder[-1].bias.copy_(torch.zeros(X.shape[1]))
-        model.decoder.w2.copy_(torch.tensor(U_pca).T)
-        model.decoder.b2.copy_(torch.zeros(X.shape[1]))
+    # with torch.no_grad():
+    #     model.encoder.encoder[0].weight.copy_(torch.tensor(U_pca))
+    #     model.encoder.encoder[0].bias.copy_(torch.zeros(hidden_dim))
+    #     # model.decoder.decoder[-1].weight.copy_(torch.tensor(U_pca).T)
+    #     # model.decoder.decoder[-1].bias.copy_(torch.zeros(X.shape[1]))
+    #     model.decoder.w2.copy_(torch.tensor(U_pca).T)
+    #     model.decoder.b2.copy_(torch.zeros(X.shape[1]))
     
-    trained_model, loss_pca_init = train(model, loader, num_epochs=3000, lr=1e-4, device=device)
-    torch.save(trained_model.state_dict(), "cantilevered_beam/autoencoder_pca_init_ic.pth")
-    pd.DataFrame(loss_pca_init).to_csv("cantilevered_beam/loss_pca_init_ic.csv", index=False)
+    # trained_model, loss_pca_init = train(model, loader, num_epochs=3000, lr=1e-4, device=device)
+    # torch.save(trained_model.state_dict(), "cantilevered_beam/autoencoder_pca_init_ic.pth")
+    # pd.DataFrame(loss_pca_init).to_csv("cantilevered_beam/loss_pca_init_ic.csv", index=False)
 
-    # trained_model, loss_init = train(model, loader, num_epochs=2000, lr=1e-4, device=device)
-    # pd.DataFrame(loss_init).to_csv("cantilevered_beam/loss_init_ic.csv", index=False)
-    # torch.save(trained_model.state_dict(), "cantilevered_beam/autoencoder_init_ic.pth")
+    trained_model, loss_init = train(model, loader, num_epochs=3000, lr=1e-4, device=device)
+    pd.DataFrame(loss_init).to_csv("cantilevered_beam/loss_init_ic.csv", index=False)
+    torch.save(trained_model.state_dict(), "cantilevered_beam/autoencoder_init_ic.pth")
     
 
 
